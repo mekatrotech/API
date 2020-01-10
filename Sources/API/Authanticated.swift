@@ -121,7 +121,7 @@ extension Authanticated {
 }
 @available(iOS 13.0, *)
 @available(OSX 10.15, *)
-extension Authanticated {
+public extension Authanticated {
 	static func login(with token: Storage.User.Token) {
 		Self.handler.handleToken(token: token)
 	}
