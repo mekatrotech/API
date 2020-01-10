@@ -13,8 +13,47 @@ public enum Login<User: UserProtocol> {
 	case errored(token: User.Token, error: Error)
 	case loggedout
 
+	public var isLogged: User? {
+		switch self {
+		case .logged(_, let user):
+			return user
+		case .validating(_):
+			return nil
+		case .errored(_, _):
+			return nil
+		case .loggedout:
+			return nil
+		}
+	}
 
-	var getToken: User.Token? {
+	public var isErrorred: Error? {
+		switch self {
+		case .logged(_, _):
+			return nil
+		case .validating(_):
+			return nil
+		case .errored(_, let error):
+			return error
+		case .loggedout:
+			return nil
+		}
+	}
+
+
+	public var isValidating: Bool {
+		switch self {
+		case .logged(_, _):
+			return false
+		case .validating(_):
+			return true
+		case .errored(_, _):
+			return false
+		case .loggedout:
+			return false
+		}
+	}
+
+	public var getToken: User.Token? {
 		switch self {
 		case .logged(let token, _):
 			return token
