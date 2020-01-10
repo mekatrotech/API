@@ -14,7 +14,7 @@ public final class KeychainStorageProvider<User: UserProtocol>: TokenStorage {
 
 
 
-	func retrive() -> User.Token? {
+	public func retrive() -> User.Token? {
 
 		guard let storage = try? keychain.getData("tokenStorage") else {
 			return nil
@@ -23,7 +23,7 @@ public final class KeychainStorageProvider<User: UserProtocol>: TokenStorage {
 		return try? JSONDecoder().decode(User.Token.self, from: storage)
 	}
 
-	func store(token: User.Token) -> Bool {
+	public func store(token: User.Token) -> Bool {
 
 		guard let data = try? JSONEncoder().encode(token) else {
 			return false

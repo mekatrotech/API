@@ -40,12 +40,12 @@ public final class LoginSubscription<API: Authanticated, SubscriberType: Subscri
 
 	private var subscriber: SubscriberType?
 
-	func request(_ demand: Subscribers.Demand) {
+	public func request(_ demand: Subscribers.Demand) {
 		// LOL Dont care
 		print("Requested!")
 	}
 
-	func cancel() {
+	public func cancel() {
 		API.handler.subs[self.myuuid] = nil
 		print("Canceled")
 	}
@@ -53,13 +53,13 @@ public final class LoginSubscription<API: Authanticated, SubscriberType: Subscri
 @available(iOS 13.0, *)
 @available(OSX 10.15, *)
 public final class LoginPublisher<API: Authanticated>: Publisher {
-	func receive<S>(subscriber: S) where S : Subscriber, LoginPublisher.Failure == S.Failure, LoginPublisher.Output == S.Input {
+	public func receive<S>(subscriber: S) where S : Subscriber, LoginPublisher.Failure == S.Failure, LoginPublisher.Output == S.Input {
 		subscriber.receive(subscription: LoginSubscription<API, S>(subscriber: subscriber))
 	}
 
-	typealias Output = Login<API.Storage.User>
+	public typealias Output = Login<API.Storage.User>
 
-	typealias Failure = Never
+	public typealias Failure = Never
 
 
 }
