@@ -16,25 +16,6 @@ public extension API {
 	}
 }
 
-
-//public class API<User: UserProtocol, Token: TokenProtocol, Storage: TokenStoroge> {
-//
-//	/// The shared login manager
-//	var login: Login<User, Token> = .loggedout {
-//		didSet {
-//
-//		}
-//	}
-//
-//	let apiBase: URL
-//	let tokenStore: Storage
-//
-//	init(base url: URL) {
-//		self.apiBase = url
-//		self.tokenStore = Storage()
-//	}
-//}
-
 public struct Responce<Request> {
 	var requestObject: Request
 	var responceBody: Data
