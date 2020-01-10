@@ -24,7 +24,7 @@ public protocol Authanticated: HTTPApi {
 
 @available(iOS 13.0, *)
 @available(OSX 10.15, *)
-final class LoginSubscription<API: Authanticated, SubscriberType: Subscriber>: Subscription where SubscriberType.Input ==  Login<API.Storage.User> {
+public final class LoginSubscription<API: Authanticated, SubscriberType: Subscriber>: Subscription where SubscriberType.Input ==  Login<API.Storage.User> {
 	internal init(subscriber: SubscriberType?) {
 		self.subscriber = subscriber
 
@@ -52,7 +52,7 @@ final class LoginSubscription<API: Authanticated, SubscriberType: Subscriber>: S
 }
 @available(iOS 13.0, *)
 @available(OSX 10.15, *)
-final class LoginPublisher<API: Authanticated>: Publisher {
+public final class LoginPublisher<API: Authanticated>: Publisher {
 	func receive<S>(subscriber: S) where S : Subscriber, LoginPublisher.Failure == S.Failure, LoginPublisher.Output == S.Input {
 		subscriber.receive(subscription: LoginSubscription<API, S>(subscriber: subscriber))
 	}
@@ -67,7 +67,7 @@ final class LoginPublisher<API: Authanticated>: Publisher {
 @available(iOS 13.0, *)
 @available(OSX 10.15, *)
 public class LoginNotificationHandler<MyAPI: Authanticated> {
-	init() { }
+	public init() { }
 
 	var currentLogin: Login<MyAPI.Storage.User> = .loggedout {
 		didSet {

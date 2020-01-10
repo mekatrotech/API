@@ -8,7 +8,7 @@
 import Foundation
 import KeychainAccess
 
-final class KeychainStorageProvider<User: UserProtocol>: TokenStorage {
+public final class KeychainStorageProvider<User: UserProtocol>: TokenStorage {
 
 	let keychain = Keychain(service: "com.my.api.secrets").synchronizable(false);
 
@@ -37,7 +37,7 @@ final class KeychainStorageProvider<User: UserProtocol>: TokenStorage {
 		}
 	}
 
-	init() {
+	public init() {
 		print("Keychain Module initialised!")
 	}
 }

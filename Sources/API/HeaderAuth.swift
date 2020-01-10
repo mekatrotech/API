@@ -8,12 +8,6 @@
 import Foundation
 
 
-protocol HeaderToken: TokenProtocol {
+public protocol HeaderToken: TokenProtocol {
 
-}
-
-extension HeaderToken {
-	public func toRequest() {
-
-	}
 }
