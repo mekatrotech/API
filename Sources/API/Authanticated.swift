@@ -114,7 +114,7 @@ public class LoginNotificationHandler<MyAPI: Authanticated> {
 
 @available(iOS 13.0, *)
 @available(OSX 10.15, *)
-extension Authanticated {
+public extension Authanticated {
 	static var currentLogin: Login<Storage.User> {
 		Self.handler.currentLogin
 	}
