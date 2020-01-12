@@ -79,6 +79,7 @@ public class LoginNotificationHandler<MyAPI: Authanticated> {
 
 	enum StorageError: Error {
 		case cannotStore
+		case cannotDelete
 	}
 
 	func handleToken(token: MyAPI.Storage.User.Token) {
@@ -103,6 +104,17 @@ public class LoginNotificationHandler<MyAPI: Authanticated> {
 		}
 	}
 
+	func releaseToken() {
+		guard let token = self.currentLogin.getToken else {
+			return
+		}
+
+		if MyAPI.tokenStore.release() {
+			self.currentLogin = .loggedout
+		} else {
+			self.currentLogin = .errored(token: token , error: StorageError.cannotDelete)
+		}
+	}
 	fileprivate var subs: [UUID: (Login<MyAPI.Storage.User>) -> ()] = [:]
 
 	fileprivate func publish() {

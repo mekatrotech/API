@@ -15,5 +15,6 @@ public protocol TokenStorage {
 	
 	func store(token: User.Token) -> Bool
 	func retrive() -> User.Token?
+	func release() -> Bool
 }
 

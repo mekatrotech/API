@@ -37,6 +37,9 @@ public final class KeychainStorageProvider<User: UserProtocol>: TokenStorage {
 		}
 	}
 
+	public func release() -> Bool {
+		(try? keychain.remove("tokenStorage")) != nil
+	}
 	public init() {
 		print("Keychain Module initialised!")
 	}
