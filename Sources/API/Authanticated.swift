@@ -138,6 +138,10 @@ public extension Authanticated {
 		Self.handler.handleToken(token: token)
 	}
 
+	static func logout() {
+		Self.handler.releaseToken()
+	}
+
 	static func start() {
 		_ = Self.handler
 		_ = Self.tokenStore
