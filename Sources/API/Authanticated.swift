@@ -175,15 +175,15 @@ public enum APIError: Error {
 public extension Authanticated  {
 
 
-//	static func perform(request: Request) -> AnyPi {
-//
-//	}
-//
-//	enum APIError: Error {
-//		case returnedMessage(message: String)
-//		case networkError(err: Error)
-//		case stillRequesting
-//	}
+	//	static func perform(request: Request) -> AnyPi {
+	//
+	//	}
+	//
+	//	enum APIError: Error {
+	//		case returnedMessage(message: String)
+	//		case networkError(err: Error)
+	//		case stillRequesting
+	//	}
 
 
 
@@ -200,7 +200,6 @@ public extension Authanticated  {
 
 			let url = Self.apiBase.appendingPathComponent(T.path)
 
-			//			print(url)
 			var request = URLRequest(url: url)
 
 			request.httpMethod = "post"
@@ -230,9 +229,9 @@ public extension Authanticated  {
 			}
 
 			return URLSession.shared.dataTaskPublisher(for: request)
-//				.print()
+				//				.print()
 				.map { resp in print(String(data: resp.data, encoding: .utf8)!); return (resp.data) }
-//				.map { $0.data }
+				//				.map { $0.data }
 				.decode(type: APIResponce<T>.self, decoder: JSONDecoder()) // Decode it
 				.tryMap({ resp in
 					switch resp {
@@ -249,6 +248,69 @@ public extension Authanticated  {
 				.eraseToAnyPublisher()
 		} catch {
 			return Fail(outputType: T.Response.self, failure: APIError.networkError(err: error)).eraseToAnyPublisher()
+		}
+	}
+
+	@available(iOS, introduced: 13.0)
+	func perform<T: Request>(request: T, callback: @escaping (T.Response?) -> ()) {
+
+		let encoder = JSONEncoder()
+
+		do {
+			let body = try encoder.encode(request)
+
+			let url = Self.apiBase.appendingPathComponent(T.path)
+
+			var request = URLRequest(url: url)
+
+			request.httpMethod = "post"
+
+			print("\(request.httpMethod!) Request to \(T.path):: \(url.absoluteString)")
+
+
+			request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+
+
+			request.httpBody = body
+
+			switch T.mode {
+			case .required:
+				if let token = Self.handler.currentLogin.getToken {
+					request.setValue("MTToken \(token.toRequest())", forHTTPHeaderField: "Authorization")
+				} else {
+					fatalError()
+				}
+			case .optional:
+				if let token = Self.handler.currentLogin.getToken {
+					request.setValue("MTToken \(token.toRequest())", forHTTPHeaderField: "Authorization")
+				}
+			case .none:
+				break
+			}
+
+			return URLSession.shared.dataTask(with: request, completionHandler: { (data, resp, err) in
+				if let data = data {
+
+					print("DBG: APIResp: \(String(data: data, encoding: .utf8)!)")
+					let decoder = JSONDecoder()
+					decoder.dateDecodingStrategy = .secondsSince1970
+					decoder.dataDecodingStrategy = .base64
+
+						if case let .success(data) = try? decoder.decode(APIResponce<T>.self, from: data) {
+							callback(data)
+						} else {
+							callback(nil)
+						}
+				}
+
+				if err != nil {
+					callback(nil)
+				}
+			})
+			.resume()
+		} catch {
+			callback(nil)
 		}
 	}
 }
