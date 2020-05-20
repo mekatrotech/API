@@ -21,7 +21,7 @@ public protocol TokenProtocol: Request, Equatable where Response: UserProtocol {
 }
 
 
-public protocol UserProtocol where Token.Response == Self {
+public protocol UserProtocol: Codable where Token.Response == Self {
 	associatedtype Token: TokenProtocol
 }
 
