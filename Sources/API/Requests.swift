@@ -7,12 +7,21 @@
 
 import Foundation
 
+
+public protocol Request: Codable {
+	associatedtype Response: Codable = EmptyResponse
+	static var mode: LoginMode { get }
+	static var path: String { get }
+}
+
+
+
 public protocol TokenProtocol: Request, Equatable where Response: UserProtocol {
 	func toRequest() -> String
 }
 
 
-public protocol UserProtocol: Codable where Token.Response == Self {
+public protocol UserProtocol where Token.Response == Self {
 	associatedtype Token: TokenProtocol
 }
 
@@ -77,11 +86,6 @@ public struct EmptyResponse: Codable {
 
 }
 
-public protocol Request: Codable {
-	associatedtype Response: Codable = EmptyResponse
-	static var mode: LoginMode { get }
-	static var path: String { get }
-}
 
 public enum LoginMode {
 	case required

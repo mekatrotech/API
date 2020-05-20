@@ -88,20 +88,17 @@ public class LoginNotificationHandler<MyAPI: Authanticated> {
 		}
 		self.currentLogin = .validating(token: token)
 		loginRequest?.cancel()
-		loginRequest = MyAPI.shared.perform(request: token).sink(receiveCompletion: { (err) in
-			// We have an error
-			print("Error validating login!: \(err)")
-			switch err {
-			case .finished:
-				break
-			case .failure(let err):
-				self.currentLogin = .errored(token: token, error: err)
-			}
+		loginRequest = MyAPI.shared.perform(request: token).sink(receiveValue: { (resp) in
+			switch resp {
 
-		}) { (myUser) in //
-			// My user
-			self.currentLogin = .logged(token: token, user: myUser)
-		}
+			case .success(data: let myUser):
+				self.currentLogin = .logged(token: token, user: myUser)
+			case .failed(message: let message):
+				self.currentLogin = .errored(token: token, error: APIError.returnedMessage(message: message))
+			case .errored(error: let error):
+				self.currentLogin = .errored(token: token, error: error)
+			}
+		})
 	}
 
 	func releaseToken() {
@@ -191,7 +188,7 @@ public extension Authanticated  {
 	/// Don't forget to store the returning value or request will be canceled!
 	/// - Parameter request: Requesting object
 	@available(iOS, introduced: 13.0)
-	func perform<T: Request>(request: T) -> AnyPublisher<T.Response, APIError> {
+	func perform<T: Request>(request: T) -> AnyPublisher<APIResponce<T>, Never> {
 
 		let encoder = JSONEncoder()
 
@@ -233,21 +230,14 @@ public extension Authanticated  {
 				.map { resp in print(String(data: resp.data, encoding: .utf8)!); return (resp.data) }
 				//				.map { $0.data }
 				.decode(type: APIResponce<T>.self, decoder: JSONDecoder()) // Decode it
-				.tryMap({ resp in
-					switch resp {
-					case .success(let data):
-						return data
-					case .failed(let message):
-						throw APIError.returnedMessage(message: message)
-					case .errored(let error):
-						throw APIError.networkError(err: error)
-					}
+				.catch({ err in
+					Just(APIResponce<T>.errored(error: err))
 				})
 				.receive(on: RunLoop.main)
-				.mapError { APIError.networkError(err: $0) }
+//				.mapError { APIError.networkError(err: $0) }
 				.eraseToAnyPublisher()
 		} catch {
-			return Fail(outputType: T.Response.self, failure: APIError.networkError(err: error)).eraseToAnyPublisher()
+			return Just(APIResponce<T>.errored(error: error)).eraseToAnyPublisher()
 		}
 	}
 
