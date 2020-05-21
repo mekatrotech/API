@@ -9,16 +9,18 @@ import Foundation
 import SwiftUI
 import Combine
 
-@available(iOS 13.0, *)
-struct TaskManagerKey: EnvironmentKey {
-	static let defaultValue: TaskManager = TaskManager()
-}
 
 @available(iOS 13.0, *)
 public class TaskManager: ObservableObject {
+	@available(*, unavailable)
 	init() {
 
 	}
+
+	private init(privateinit: ()) {
+
+	}
+	static var shared = TaskManager(privateinit: ())
 
 	func update(task id: UUID, new status: Task.TaskStatus) {
 		if let index = self.tasks.lastIndex(where: {$0.id == id}) {
@@ -72,18 +74,6 @@ public class TaskManager: ObservableObject {
 			var image: String = "timer"
 			var color: UIColor = .red
 			var shouldPause = false
-		}
-	}
-}
-
-@available(iOS 13.0, *)
-extension EnvironmentValues {
-	var taskManager: TaskManager {
-		get {
-			return self[TaskManagerKey.self]
-		}
-		set {
-			self[TaskManagerKey.self] = newValue
 		}
 	}
 }
