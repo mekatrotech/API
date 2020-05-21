@@ -70,7 +70,7 @@ public class TaskManager: ObservableObject {
 		}
 
 		public struct Details {
-			internal init(name: String, image: String = "timer", color: UIColor = .red, shouldPause: Bool = false) {
+			public init(name: String, image: String = "timer", color: UIColor = .red, shouldPause: Bool = false) {
 				self.name = name
 				self.image = image
 				self.color = color
