@@ -70,10 +70,10 @@ public class TaskManager: ObservableObject {
 		}
 
 		public struct Details {
-			var name: String
-			var image: String = "timer"
-			var color: UIColor = .red
-			var shouldPause = false
+			public var name: String
+			public var image: String = "timer"
+			public var color: UIColor = .red
+			public var shouldPause = false
 		}
 	}
 }
