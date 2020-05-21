@@ -20,7 +20,7 @@ public class TaskManager: ObservableObject {
 	private init(privateinit: ()) {
 
 	}
-	static var shared = TaskManager(privateinit: ())
+	static public var shared = TaskManager(privateinit: ())
 
 	func update(task id: UUID, new status: Task.TaskStatus) {
 		if let index = self.tasks.lastIndex(where: {$0.id == id}) {
@@ -53,9 +53,9 @@ public class TaskManager: ObservableObject {
 		}
 	}
 
-	@Published var tasks: [Task] = []
+	@Published public var tasks: [Task] = []
 
-	@Published var pause: Bool = false
+	@Published public var pause: Bool = false
 
 	public struct Task: Identifiable {
 		public var id: UUID = UUID()
@@ -80,7 +80,7 @@ public class TaskManager: ObservableObject {
 
 @available(iOS 13.0, *)
 extension Publisher {
-	func manage(details: TaskManager.Task.Details) -> ManagedPublisher<Self> {
+	public func manage(details: TaskManager.Task.Details) -> ManagedPublisher<Self> {
 		return ManagedPublisher(upstream: self, manager: TaskManager.shared, details: details)
 	}
 }
