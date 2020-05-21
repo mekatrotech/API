@@ -41,14 +41,14 @@ public class TaskManager: ObservableObject {
 
 		var pause = false
 		for task in tasks {
-			if task.status != .ended || task.status != .canceled {
-				if task.details.shouldPause {
-					pause = true
-					break
-				}
+			if task.status == .created && task.details.shouldPause {
+				print("Task with id '\(task.id)' is pausing screen")
+				pause = true
+				break
 			}
 		}
 		if self.pause != pause {
+			print("Set Pause: \(pause)")
 			self.pause = pause
 		}
 	}
@@ -63,10 +63,10 @@ public class TaskManager: ObservableObject {
 		public var status: TaskStatus = .created
 		public enum TaskStatus: String {
 			case created
-			case subscribed
-			case hasInput
+//			case subscribed
+//			case hasInput
 			case ended
-			case canceled
+//			case canceled
 		}
 
 		public struct Details {
@@ -117,6 +117,7 @@ public class ManagedPublisher<Upstream>: Publisher where Upstream: Publisher {
 		let task = TaskManager.Task(details: details)
 		self.id = task.id
 		self.manager.tasks.append(task)
+		self.manager.update(task: self.id, new: .created)
 		Swift.print("Registering new task")
 	}
 
@@ -138,12 +139,12 @@ public class ManagedPublisher<Upstream>: Publisher where Upstream: Publisher {
 		var sub: Subscription?
 
 		func receive(subscription: Subscription) {
-			self.manager.update(task: self.taskID, new: .subscribed)
+//			self.manager.update(task: self.taskID, new: .subscribed)
 			subscription.request(.unlimited)
 		}
 
 		func receive(_ input: Input) -> Subscribers.Demand {
-			self.manager.update(task: self.taskID, new: .hasInput)
+//			self.manager.update(task: self.taskID, new: .hasInput)
 			return .max(1)
 		}
 
@@ -152,7 +153,7 @@ public class ManagedPublisher<Upstream>: Publisher where Upstream: Publisher {
 		}
 
 		deinit {
-			self.manager.update(task: self.taskID, new: .canceled)
+			self.manager.update(task: self.taskID, new: .ended)
 		}
 	}
 }
