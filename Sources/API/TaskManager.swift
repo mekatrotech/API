@@ -20,6 +20,9 @@ public class TaskManager: ObservableObject {
 	private init(privateinit: ()) {
 
 	}
+
+	var forgetTasks: [UUID: AnyCancellable] = [:]
+
 	static public var shared = TaskManager(privateinit: ())
 
 	func update(task id: UUID, new status: Task.TaskStatus) {
@@ -56,6 +59,7 @@ public class TaskManager: ObservableObject {
 	@Published public var tasks: [Task] = []
 
 	@Published public var pause: Bool = false
+	@Published public var message: String? = nil
 
 	public struct Task: Identifiable {
 		public var id: UUID = UUID()
@@ -89,6 +93,26 @@ public class TaskManager: ObservableObject {
 extension Publisher {
 	public func manage(details: TaskManager.Task.Details) -> ManagedPublisher<Self> {
 		return ManagedPublisher(upstream: self, manager: TaskManager.shared, details: details)
+	}
+
+	public func forget<R: Request>(with details: TaskManager.Task.Details) where Self.Output == APIResponce<R>, Self.Failure == Never {
+
+		let task = TaskManager.Task(details: details)
+		TaskManager.shared.tasks.append(task)
+
+		TaskManager.shared.forgetTasks[task.id] = self.sink { (resp) in
+			TaskManager.shared.update(task: task.id, new: .ended)
+
+			switch resp {
+			case .success(_):
+				break
+			case .failed(message: let message):
+				TaskManager.shared.message = message
+			case .errored(error: let error):
+				TaskManager.shared.message = error.localizedDescription
+			}
+			TaskManager.shared.forgetTasks[task.id] = nil
+		}
 	}
 }
 
