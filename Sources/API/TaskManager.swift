@@ -80,8 +80,8 @@ public class TaskManager: ObservableObject {
 
 @available(iOS 13.0, *)
 extension Publisher {
-	func manage(using manager: TaskManager, details: TaskManager.Task.Details) -> ManagedPublisher<Self> {
-		return ManagedPublisher(upstream: self, manager: manager, details: details)
+	func manage(details: TaskManager.Task.Details) -> ManagedPublisher<Self> {
+		return ManagedPublisher(upstream: self, manager: TaskManager.shared, details: details)
 	}
 }
 

@@ -88,7 +88,7 @@ public class LoginNotificationHandler<MyAPI: Authanticated> {
 		}
 		self.currentLogin = .validating(token: token)
 		loginRequest?.cancel()
-		loginRequest = MyAPI.shared.perform(request: token).sink(receiveValue: { (resp) in
+		loginRequest = MyAPI.shared.perform(request: token).manage(details: .init(name: "Validating Login", image: "personalhotspot", color: .yellow, shouldPause: true)).sink(receiveValue: { (resp) in
 			switch resp {
 
 			case .success(data: let myUser):
