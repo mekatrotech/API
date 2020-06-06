@@ -95,7 +95,7 @@ extension Publisher {
 		return ManagedPublisher(upstream: self, manager: TaskManager.shared, details: details)
 	}
 
-	public func forget<R: Request>(with details: TaskManager.Task.Details) where Self.Output == APIResponce<R>, Self.Failure == Never {
+	public func forget<R: Request>(with details: TaskManager.Task.Details,  callback: (()->())? = nil ) where Self.Output == APIResponce<R>, Self.Failure == Never {
 
 		let task = TaskManager.Task(details: details)
 		TaskManager.shared.tasks.append(task)
@@ -105,6 +105,7 @@ extension Publisher {
 
 			switch resp {
 			case .success(_):
+				callback?()
 				break
 			case .failed(message: let message):
 				TaskManager.shared.message = message
