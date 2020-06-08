@@ -10,6 +10,7 @@ import SwiftUI
 import Combine
 
 
+@available(watchOS 6.0, *)
 @available(iOS 13.0, *)
 public class TaskManager: ObservableObject {
 	@available(*, unavailable)
@@ -89,6 +90,7 @@ public class TaskManager: ObservableObject {
 	}
 }
 
+@available(watchOS 6.0, *)
 @available(iOS 13.0, *)
 extension Publisher {
 	public func manage(details: TaskManager.Task.Details) -> ManagedPublisher<Self> {
@@ -117,6 +119,7 @@ extension Publisher {
 	}
 }
 
+@available(watchOS 6.0, *)
 @available(iOS 13.0, *)
 public class ManagedPublisher<Upstream>: Publisher where Upstream: Publisher {
 

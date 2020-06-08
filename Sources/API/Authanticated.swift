@@ -10,6 +10,7 @@ import Combine
 
 @available(iOS 13.0, *)
 @available(OSX 10.15, *)
+@available(watchOS 6.0, *)
 public protocol Authanticated: HTTPApi {
 
 	associatedtype Storage: TokenStorage // where Storage.Token == User.Token
@@ -22,6 +23,7 @@ public protocol Authanticated: HTTPApi {
 }
 
 
+@available(watchOS 6.0, *)
 @available(iOS 13.0, *)
 @available(OSX 10.15, *)
 public final class LoginSubscription<API: Authanticated, SubscriberType: Subscriber>: Subscription where SubscriberType.Input ==  Login<API.Storage.User> {
@@ -50,6 +52,7 @@ public final class LoginSubscription<API: Authanticated, SubscriberType: Subscri
 		print("Canceled")
 	}
 }
+@available(watchOS 6.0, *)
 @available(iOS 13.0, *)
 @available(OSX 10.15, *)
 public final class LoginPublisher<API: Authanticated>: Publisher {
@@ -64,6 +67,7 @@ public final class LoginPublisher<API: Authanticated>: Publisher {
 
 }
 
+@available(watchOS 6.0, *)
 @available(iOS 13.0, *)
 @available(OSX 10.15, *)
 public class LoginNotificationHandler<MyAPI: Authanticated> {
@@ -121,6 +125,7 @@ public class LoginNotificationHandler<MyAPI: Authanticated> {
 	}
 }
 
+@available(watchOS 6.0, *)
 @available(iOS 13.0, *)
 @available(OSX 10.15, *)
 public extension Authanticated {
@@ -128,6 +133,7 @@ public extension Authanticated {
 		Self.handler.currentLogin
 	}
 }
+@available(watchOS 6.0, *)
 @available(iOS 13.0, *)
 @available(OSX 10.15, *)
 public extension Authanticated {
@@ -169,6 +175,7 @@ public enum APIError: Error {
 
 @available(iOS 13.0, *)
 @available(OSX 10.15, *)
+@available(watchOS 6.0, *)
 public extension Authanticated  {
 
 
