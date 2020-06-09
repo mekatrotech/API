@@ -94,6 +94,7 @@ public class TaskManager: ObservableObject {
 @available(iOS 13.0, *)
 extension Publisher {
 	public func manage(details: TaskManager.Task.Details) -> ManagedPublisher<Self> {
+
 		return ManagedPublisher(upstream: self, manager: TaskManager.shared, details: details)
 	}
 
@@ -150,17 +151,23 @@ public class ManagedPublisher<Upstream>: Publisher where Upstream: Publisher {
 	}
 
 	public func receive<S>(subscriber: S) where S: Subscriber, Upstream.Failure == S.Failure, Upstream.Output == S.Input {
-		upstream.receive(subscriber: ManagerSubscriber(taskID: id, manager: self.manager))
-		upstream.receive(subscriber: subscriber)
+		upstream.receive(subscriber: ManagerSubscriber(downstream: subscriber, taskID: id, manager: self.manager))
+//		upstream.receive(subscriber: subscriber)
 	}
 
-	class ManagerSubscriber<Input, Failure: Error>: Subscriber {
+	class ManagerSubscriber<Downstream: Subscriber>: Subscriber where Downstream.Input == Output, Downstream.Failure == Upstream.Failure {
+
+        typealias Input = Upstream.Output
+        typealias Failure = Upstream.Failure
+
+        private let downstream: Downstream
 		var combineIdentifier: CombineIdentifier = .init()
 		var taskID: UUID
 		var manager: TaskManager
 
-		public init(taskID: UUID, manager: TaskManager) {
+		public init(downstream: Downstream, taskID: UUID, manager: TaskManager) {
 			self.taskID = taskID
+			self.downstream = downstream
 			self.manager = manager
 		}
 
@@ -168,15 +175,18 @@ public class ManagedPublisher<Upstream>: Publisher where Upstream: Publisher {
 
 		func receive(subscription: Subscription) {
 //			self.manager.update(task: self.taskID, new: .subscribed)
-			subscription.request(.unlimited)
+//			subscription.request(.unlimited)
+			downstream.receive(subscription: subscription)
 		}
 
 		func receive(_ input: Input) -> Subscribers.Demand {
 //			self.manager.update(task: self.taskID, new: .hasInput)
-			return .max(1)
+			return downstream.receive(input)
+//			return .max(1)
 		}
 
 		func receive(completion: Subscribers.Completion<Failure>) {
+			downstream.receive(completion: completion)
 			self.manager.update(task: self.taskID, new: .ended)
 		}
 
