@@ -67,13 +67,7 @@ public enum APIResponce<T: Request>: Codable {
 			self = .failed(message: value)
 			return
 		}
-
-		if let value = try? values.decode(T.Response.self, forKey: .success) {
-			self = .success(data: value)
-			return
-		}
-
-		 throw PostTypeCodingError.decoding("No success of failed found in responce")
+		self = .success(data: try values.decode(T.Response.self, forKey: .success))
 	}
 
 	public func encode(to encoder: Encoder) throws {
