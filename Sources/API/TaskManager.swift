@@ -75,7 +75,7 @@ public class TaskManager: ObservableObject {
 		}
 
 		public struct Details {
-			public init(name: String, image: String = "timer", color: UIColor = .red, shouldPause: Bool = false) {
+			public init(name: String, image: String = "timer", color: Color = .red, shouldPause: Bool = false) {
 				self.name = name
 				self.image = image
 				self.color = color
@@ -84,7 +84,7 @@ public class TaskManager: ObservableObject {
 
 			public var name: String
 			public var image: String = "timer"
-			public var color: UIColor = .red
+			public var color: Color = .red
 			public var shouldPause = false
 		}
 	}

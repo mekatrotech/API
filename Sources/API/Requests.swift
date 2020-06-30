@@ -8,8 +8,20 @@
 import Foundation
 
 
+public protocol Previewable {
+	static var PreviewValue: Self { get }
+}
+
+
+extension Array: Previewable where Element: Previewable {
+	public static var PreviewValue: Array<Element> {
+		return [Element.PreviewValue]
+	}
+}
+
 public protocol Request: Codable {
-	associatedtype Response: Codable = EmptyResponse
+	associatedtype Base: API
+	associatedtype Response: (Codable & Previewable) = EmptyResponse
 	static var mode: LoginMode { get }
 	static var path: String { get }
 }

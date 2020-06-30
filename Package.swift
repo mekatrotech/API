@@ -6,7 +6,7 @@ import PackageDescription
 let package = Package(
 	name: "API",
 	platforms: [
-		.iOS(.v12),.watchOS(.v5)
+		.iOS("13"), .macOS("10.15")
 	],
 	products: [
 		// Products define the executables and libraries produced by a package, and make them visible to other packages.
