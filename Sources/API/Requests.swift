@@ -88,8 +88,8 @@ public enum APIResponce<T: Request>: Codable {
 }
 
 
-public struct EmptyResponse: Codable {
-
+public struct EmptyResponse: Codable, Previewable {
+	public static var PreviewValue: EmptyResponse = EmptyResponse()
 }
 
 
