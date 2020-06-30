@@ -26,7 +26,7 @@ public protocol Request: Codable {
 	static var path: String { get }
 }
 
-extension Request where Base: Authanticated {
+public extension Request where Base: Authanticated {
 	func perform() -> AnyPublisher<APIResponce<Self.Response>, Never> {
 		return Base.shared.perform(request: self)
 	}
