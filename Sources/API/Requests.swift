@@ -6,7 +6,7 @@
 //
 
 import Foundation
-
+import Combine
 
 public protocol Previewable {
 	static var PreviewValue: Self { get }
@@ -24,6 +24,12 @@ public protocol Request: Codable {
 	associatedtype Response: (Codable & Previewable) = EmptyResponse
 	static var mode: LoginMode { get }
 	static var path: String { get }
+}
+
+extension Request where Base: Authanticated {
+	func perform() -> AnyPublisher<APIResponce<Self.Response>, Never> {
+		return Base.shared.perform(request: self)
+	}
 }
 
 
@@ -52,10 +58,10 @@ public extension IdEquatable {
 public typealias Coquatable = Codable & Equatable
 
 /// Root object that returns from the API
-public enum APIResponce<T: Request>: Codable {
+public enum APIResponce<T: Codable>: Codable {
 
 	/// When request is successful
-	case success(data: T.Response)
+	case success(data: T)
 	/// When the server responded with failure message
 	case failed(message: String)
 	/// When other errors occur (Network connectivity etc..)
@@ -79,7 +85,7 @@ public enum APIResponce<T: Request>: Codable {
 			self = .failed(message: value)
 			return
 		}
-		self = .success(data: try values.decode(T.Response.self, forKey: .success))
+		self = .success(data: try values.decode(T.self, forKey: .success))
 	}
 
 	public func encode(to encoder: Encoder) throws {

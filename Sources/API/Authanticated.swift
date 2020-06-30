@@ -195,7 +195,7 @@ public extension Authanticated  {
 	/// Don't forget to store the returning value or request will be canceled!
 	/// - Parameter request: Requesting object
 	@available(iOS, introduced: 13.0)
-	func perform<T: Request>(request: T) -> AnyPublisher<APIResponce<T>, Never> {
+	func perform<T: Request>(request: T) -> AnyPublisher<APIResponce<T.Response>, Never> {
 
 		let encoder = JSONEncoder()
 
@@ -236,15 +236,15 @@ public extension Authanticated  {
 				//				.print()
 				.map { resp in print(String(data: resp.data, encoding: .utf8)!); return (resp.data) }
 				//				.map { $0.data }
-				.decode(type: APIResponce<T>.self, decoder: JSONDecoder()) // Decode it
+				.decode(type: APIResponce<T.Response>.self, decoder: JSONDecoder()) // Decode it
 				.catch({ err in
-					Just(APIResponce<T>.errored(error: err))
+					Just(APIResponce<T.Response>.errored(error: err))
 				})
 				.receive(on: RunLoop.main)
 //				.mapError { APIError.networkError(err: $0) }
 				.eraseToAnyPublisher()
 		} catch {
-			return Just(APIResponce<T>.errored(error: error)).eraseToAnyPublisher()
+			return Just(APIResponce<T.Response>.errored(error: error)).eraseToAnyPublisher()
 		}
 	}
 
@@ -294,11 +294,11 @@ public extension Authanticated  {
 					decoder.dateDecodingStrategy = .secondsSince1970
 					decoder.dataDecodingStrategy = .base64
 
-						if case let .success(data) = try? decoder.decode(APIResponce<T>.self, from: data) {
-							callback(data)
-						} else {
-							callback(nil)
-						}
+					if case let .success(data) = try? decoder.decode(APIResponce<T.Response>.self, from: data) {
+						callback(data)
+					} else {
+						callback(nil)
+					}
 				}
 
 				if err != nil {
