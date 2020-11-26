@@ -14,12 +14,9 @@ import Combine
 public protocol Authanticated: HTTPApi {
 
 	associatedtype Storage: TokenStorage // where Storage.Token == User.Token
-	static var handler: LoginNotificationHandler<Self> { get }
+	static var tokenHandler: LoginNotificationHandler<Self> { get }
 	static var tokenStore: Storage { get }
 
-	static var loginNotifications: Notification.Name { get }
-
-	//	static func verify(token: Storage.Token) -> AnyPublisher<User, Never>
 }
 
 
@@ -33,7 +30,7 @@ public final class LoginSubscription<API: Authanticated, SubscriberType: Subscri
 		let f = self.subscriber!.receive(_:)
 
 
-		API.handler.subs[self.myuuid] =  { i in
+		API.tokenHandler.subs[self.myuuid] =  { i in
 			_ = f(i) // LOL
 		}
 	}
@@ -48,7 +45,7 @@ public final class LoginSubscription<API: Authanticated, SubscriberType: Subscri
 	}
 
 	public func cancel() {
-		API.handler.subs[self.myuuid] = nil
+		API.tokenHandler.subs[self.myuuid] = nil
 		print("Canceled")
 	}
 }
@@ -130,7 +127,7 @@ public class LoginNotificationHandler<MyAPI: Authanticated> {
 @available(OSX 10.15, *)
 public extension Authanticated {
 	static var currentLogin: Login<Storage.User> {
-		Self.handler.currentLogin
+		Self.tokenHandler.currentLogin
 	}
 }
 @available(watchOS 6.0, *)
@@ -138,15 +135,15 @@ public extension Authanticated {
 @available(OSX 10.15, *)
 public extension Authanticated {
 	static func login(with token: Storage.User.Token) {
-		Self.handler.handleToken(token: token)
+		Self.tokenHandler.handleToken(token: token)
 	}
 
 	static func logout() {
-		Self.handler.releaseToken()
+		Self.tokenHandler.releaseToken()
 	}
 
 	static func start() {
-		_ = Self.handler
+		_ = Self.tokenHandler // Init
 		_ = Self.tokenStore
 
 
@@ -155,7 +152,7 @@ public extension Authanticated {
 			print("We have a token!!")
 			// Use it!
 
-			Self.handler.handleToken(token: token)
+			Self.tokenHandler.handleToken(token: token)
 		} else {
 			print("We dont have any tokens!")
 		}
@@ -194,45 +191,27 @@ public extension Authanticated  {
 	/// Performs the request object
 	/// Don't forget to store the returning value or request will be canceled!
 	/// - Parameter request: Requesting object
-	@available(iOS, introduced: 13.0)
-	func perform<T: Request>(request: T) -> AnyPublisher<APIResponce<T.Response>, Never> {
+
+
+	@available(iOS, introduced: 13.0, deprecated: 14.0, obsoleted: 14.1)
+	func perform<T: Request>(request : T) -> AnyPublisher<APIResponce<T.Response>, Never> {
 
 		let encoder = JSONEncoder()
 
 		do {
-			let body = try encoder.encode(request)
 
-			let url = Self.apiBase.appendingPathComponent(T.path)
+			var httpRequest = URLRequest(url: Self.apiBase.appendingPathComponent(T.path))
 
-			var request = URLRequest(url: url)
-
-			request.httpMethod = "post"
-
-			print("\(request.httpMethod!) Request to \(T.path):: \(url.absoluteString)")
-
-
-			request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-
-
-			request.httpBody = body
+			try request.build(request: &httpRequest)
 
 			switch T.mode {
 			case .required:
-				if let token = Self.handler.currentLogin.getToken {
-					request.setValue("MTToken \(token.toRequest())", forHTTPHeaderField: "Authorization")
-				} else {
-					fatalError()
-				}
-			case .optional:
-				if let token = Self.handler.currentLogin.getToken {
-					request.setValue("MTToken \(token.toRequest())", forHTTPHeaderField: "Authorization")
-				}
+				Self.tokenHandler.currentLogin.getToken!.authanticate(on: &httpRequest)
 			case .none:
 				break
 			}
 
-			return URLSession.shared.dataTaskPublisher(for: request)
+			return URLSession.shared.dataTaskPublisher(for: httpRequest)
 				//				.print()
 				.map { resp in print(String(data: resp.data, encoding: .utf8)!); return (resp.data) }
 				//				.map { $0.data }
@@ -248,45 +227,26 @@ public extension Authanticated  {
 		}
 	}
 
-	@available(iOS, introduced: 13.0)
+	
+	@available(iOS, introduced: 13.0, obsoleted: 14.0)
 	func perform<T: Request>(request: T, callback: @escaping (T.Response?) -> ()) {
 
-		let encoder = JSONEncoder()
 
 		do {
-			let body = try encoder.encode(request)
-
-			let url = Self.apiBase.appendingPathComponent(T.path)
-
-			var request = URLRequest(url: url)
-
-			request.httpMethod = "post"
-
-			print("\(request.httpMethod!) Request to \(T.path):: \(url.absoluteString)")
+			var httpRequest = URLRequest(url: Self.apiBase.appendingPathComponent(T.path))
+			try request.build(request: &httpRequest)
 
 
-			request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-
-
-			request.httpBody = body
 
 			switch T.mode {
 			case .required:
-				if let token = Self.handler.currentLogin.getToken {
-					request.setValue("MTToken \(token.toRequest())", forHTTPHeaderField: "Authorization")
-				} else {
-					fatalError()
-				}
-			case .optional:
-				if let token = Self.handler.currentLogin.getToken {
-					request.setValue("MTToken \(token.toRequest())", forHTTPHeaderField: "Authorization")
-				}
+				Self.tokenHandler.currentLogin.getToken!.authanticate(on: &httpRequest)
 			case .none:
 				break
 			}
 
-			return URLSession.shared.dataTask(with: request, completionHandler: { (data, resp, err) in
+
+			return URLSession.shared.dataTask(with: httpRequest, completionHandler: { (data, resp, err) in
 				if let data = data {
 
 					print("DBG: APIResp: \(String(data: data, encoding: .utf8)!)")

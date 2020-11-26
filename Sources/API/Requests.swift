@@ -15,17 +15,54 @@ public protocol Previewable {
 
 extension Array: Previewable where Element: Previewable {
 	public static var PreviewValue: Array<Element> {
-		return [Element.PreviewValue]
+		return [Element.PreviewValue, Element.PreviewValue, Element.PreviewValue, Element.PreviewValue]
 	}
 }
 
-public protocol Request: Codable {
+public enum HTTPMethod: String {
+	case get
+	case post
+	case put
+}
+
+public protocol Request {
 	associatedtype Base: API
 	associatedtype Response: (Codable & Previewable) = EmptyResponse
 	static var mode: LoginMode { get }
 	static var path: String { get }
+
+	func build(request: inout URLRequest) throws
 }
 
+extension Request {
+	static var mode: LoginMode { .none }
+}
+
+
+public protocol PostRequest: Request where Base: HTTPApi, Self: Codable { }
+public protocol GetRequest: Request where Base: HTTPApi { }
+public protocol LoginRequired: Request { }
+
+extension LoginRequired {
+	static var mode: LoginMode { .required }
+}
+
+extension GetRequest {
+	public func build(request: inout URLRequest) throws {
+//		let encoder = JSONEncoder()
+		request.httpMethod = "get"
+//		request.httpBody = try encoder.encode(self)
+//		request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+	}
+}
+extension PostRequest {
+	public func build(request: inout URLRequest) throws {
+		let encoder = JSONEncoder()
+		request.httpMethod = "post"
+		request.httpBody = try encoder.encode(self)
+		request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+	}
+}
 public extension Request where Base: Authanticated {
 	func perform() -> AnyPublisher<APIResponce<Self.Response>, Never> {
 		return Base.shared.perform(request: self)
@@ -35,12 +72,12 @@ public extension Request where Base: Authanticated {
 
 
 public protocol TokenProtocol: Request, Equatable where Response: UserProtocol {
-	func toRequest() -> String
+	func authanticate(on request: inout URLRequest)
 }
 
 
-public protocol UserProtocol: Codable where Token.Response == Self {
-	associatedtype Token: TokenProtocol
+public protocol UserProtocol where Token.Response == Self {
+	associatedtype Token: TokenProtocol, Codable
 }
 
 //public protocol LoginProvider: Request, PostData where Response: TokenProtocol { }
@@ -101,12 +138,12 @@ public struct EmptyResponse: Codable, Previewable {
 
 public enum LoginMode {
 	case required
-	case optional
+//	case optional
 	case none
 }
 
 
-public protocol LoginRequired { }
+//public protocol LoginRequired { }
 public protocol PostData: Encodable { }
 
 

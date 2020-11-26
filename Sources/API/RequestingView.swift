@@ -31,7 +31,13 @@ public extension EnvironmentValues {
 }
 
 
-public struct Simulating<R: Request>: Request {
+public struct Simulating<R: Request>: Request where R.Base: HTTPApi {
+
+	public func build(request: inout URLRequest) throws {
+		request.setValue("\(user)", forHTTPHeaderField: "x-user")
+		try self.simulating.build(request: &request)
+	}
+
 	public typealias Base = R.Base
 	public static var mode: LoginMode  { R.mode }
 	public static var path: String { R.path }
@@ -55,8 +61,6 @@ public func updateRequesting(identifier: String, clean: Bool = false) {
 	NotificationCenter.default.post(name: .requestUpdateNotification, object: nil, userInfo: ["requestingUpdateIdentifier": identifier, "clean": clean])
 }
 
-@available(OSX 10.16, *)
-@available(iOS 14.0, *)
 public struct RequestingView<R: Request, Content>: View where Content: View, R.Base : Authanticated {
 
 	@Environment(\.simulatingUser) var simulatingUser: Int?
@@ -87,7 +91,11 @@ public struct RequestingView<R: Request, Content>: View where Content: View, R.B
 				switch self.responce {
 				case .none:
 					VStack {
-						ProgressView() {
+						if #available(iOS 14.0, *) {
+							ProgressView() {
+								Text("Loading!")
+							}
+						} else {
 							Text("Loading!")
 						}
 					}
