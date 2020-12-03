@@ -89,17 +89,22 @@ public class LoginNotificationHandler<MyAPI: Authanticated> {
 		}
 		self.currentLogin = .validating(token: token)
 		loginRequest?.cancel()
-		loginRequest = MyAPI.shared.perform(request: token).manage(details: .init(name: "Validating Login", image: "personalhotspot", color: .yellow, shouldPause: true)).sink(receiveValue: { (resp) in
-			switch resp {
+		loginRequest = MyAPI.shared.perform(request: token)
+			.manage(details: .init(name: "Validating Login", image: "personalhotspot", color: .yellow, shouldPause: true))
+			.sink { error in
+				if case .failure(let error) = error {
+					self.currentLogin = .errored(token: token, error: error)
+				}
+			} receiveValue: { response in
+				let result = MyAPI.Storage.User.Token.getUser(from: response)
+				switch result {
+				case .success(let user):
+					self.currentLogin = .logged(token: token, user: user)
+				case .failure(let error):
+					self.currentLogin = .errored(token: token, error: error)
+				}
 
-			case .success(data: let myUser):
-				self.currentLogin = .logged(token: token, user: myUser)
-			case .failed(message: let message):
-				self.currentLogin = .errored(token: token, error: APIError.returnedMessage(message: message))
-			case .errored(error: let error):
-				self.currentLogin = .errored(token: token, error: error)
 			}
-		})
 	}
 
 	func releaseToken() {
@@ -194,13 +199,10 @@ public extension Authanticated  {
 
 
 	@available(iOS, introduced: 13.0, deprecated: 14.0, obsoleted: 14.1)
-	func perform<T: Request>(request : T) -> AnyPublisher<APIResponce<T.Response>, Never> {
-
-		let encoder = JSONEncoder()
+	func perform<T: Request>(request : T) -> AnyPublisher<T.Response, Error> {
 
 		do {
-
-			var httpRequest = URLRequest(url: Self.apiBase.appendingPathComponent(T.path))
+			var httpRequest = URLRequest(url: Self.apiBase)
 
 			try request.build(request: &httpRequest)
 
@@ -211,24 +213,25 @@ public extension Authanticated  {
 				break
 			}
 
+			let decoder = JSONDecoder()
+
+			let dateFormatter = DateFormatter()
+			dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+			dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+			decoder.dateDecodingStrategy = .formatted(dateFormatter)
+
 			return URLSession.shared.dataTaskPublisher(for: httpRequest)
-				//				.print()
-				.map { resp in print(String(data: resp.data, encoding: .utf8)!); return (resp.data) }
-				//				.map { $0.data }
-				.decode(type: APIResponce<T.Response>.self, decoder: JSONDecoder()) // Decode it
-				.catch({ err in
-					Just(APIResponce<T.Response>.errored(error: err))
-				})
+				.map { $0.data }
+				.decode(type: T.Response.self, decoder: decoder) // Decode it
 				.receive(on: RunLoop.main)
-//				.mapError { APIError.networkError(err: $0) }
 				.eraseToAnyPublisher()
 		} catch {
-			return Just(APIResponce<T.Response>.errored(error: error)).eraseToAnyPublisher()
+			return Fail(outputType: T.Response.self, failure: error).eraseToAnyPublisher()
 		}
 	}
 
 	
-	@available(iOS, introduced: 13.0, obsoleted: 14.0)
+	@available(iOS, introduced: 13.0, obsoleted: 14.0, renamed: "perform(request:)")
 	func perform<T: Request>(request: T, callback: @escaping (T.Response?) -> ()) {
 
 

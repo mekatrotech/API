@@ -40,7 +40,7 @@ public class TaskManager: ObservableObject {
 					}
 				}
 			}
-			print("Updated task: \(self.tasks[index])")
+//			print("Updated task: \(self.tasks[index])")
 		}
 
 		var pause = false
@@ -52,7 +52,7 @@ public class TaskManager: ObservableObject {
 			}
 		}
 		if self.pause != pause {
-			print("Set Pause: \(pause)")
+//			print("Set Pause: \(pause)")
 			self.pause = pause
 		}
 	}
@@ -147,7 +147,7 @@ public class ManagedPublisher<Upstream>: Publisher where Upstream: Publisher {
 		self.id = task.id
 		self.manager.tasks.append(task)
 		self.manager.update(task: self.id, new: .created)
-		Swift.print("Registering new task")
+//		Swift.print("Registering new task")
 	}
 
 	public func receive<S>(subscriber: S) where S: Subscriber, Upstream.Failure == S.Failure, Upstream.Output == S.Input {

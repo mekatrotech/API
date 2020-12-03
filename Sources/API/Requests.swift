@@ -32,6 +32,7 @@ public protocol Request {
 	static var path: String { get }
 
 	func build(request: inout URLRequest) throws
+//	func decode(response: Data) -> Response
 }
 
 extension Request {
@@ -51,6 +52,7 @@ extension GetRequest {
 	public func build(request: inout URLRequest) throws {
 //		let encoder = JSONEncoder()
 		request.httpMethod = "get"
+		request.url = Self.Base.apiBase.appendingPathComponent(Self.path)
 //		request.httpBody = try encoder.encode(self)
 //		request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 	}
@@ -58,25 +60,28 @@ extension GetRequest {
 extension PostRequest {
 	public func build(request: inout URLRequest) throws {
 		let encoder = JSONEncoder()
+		request.url = Self.Base.apiBase.appendingPathComponent(Self.path)
 		request.httpMethod = "post"
 		request.httpBody = try encoder.encode(self)
 		request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 	}
 }
 public extension Request where Base: Authanticated {
-	func perform() -> AnyPublisher<APIResponce<Self.Response>, Never> {
+	func perform() -> AnyPublisher<Self.Response, Error> {
 		return Base.shared.perform(request: self)
 	}
 }
 
 
 
-public protocol TokenProtocol: Request, Equatable where Response: UserProtocol {
+public protocol TokenProtocol: Request, Equatable {
+	associatedtype User: UserProtocol
 	func authanticate(on request: inout URLRequest)
+	static func getUser(from: Self.Response) -> Result<User, Error>
 }
 
 
-public protocol UserProtocol where Token.Response == Self {
+public protocol UserProtocol where Token.User == Self {
 	associatedtype Token: TokenProtocol, Codable
 }
 
@@ -130,6 +135,11 @@ public enum APIResponce<T: Codable>: Codable {
 	}
 }
 
+extension APIResponce: Previewable where T: Previewable {
+	public static var PreviewValue: APIResponce<T> {
+		return .success(data: T.PreviewValue)
+	}
+}
 
 public struct EmptyResponse: Codable, Previewable {
 	public static var PreviewValue: EmptyResponse = EmptyResponse()

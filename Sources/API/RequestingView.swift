@@ -65,7 +65,7 @@ public struct RequestingView<R: Request, Content>: View where Content: View, R.B
 
 	@Environment(\.simulatingUser) var simulatingUser: Int?
 
-	public init(_ request: R, details: TaskManager.Task.Details? = nil, updateIdentifier: String = "", @ViewBuilder content: @escaping (_ response: R.Response) -> Content) {
+	public init(_ request: R, details: TaskManager.Task.Details? = nil, updateIdentifier: String = "", @ViewBuilder content: @escaping (_ response:  R.Response) -> Content) {
 		self.details = details ?? TaskManager.Task.Details(name: "Loading", image: "hexagon.fill", color: .green, shouldPause: false)
 		self.request = request
 		self.updateIdentifier = updateIdentifier
@@ -76,34 +76,24 @@ public struct RequestingView<R: Request, Content>: View where Content: View, R.B
 	var request: R
 	var updateIdentifier: String = ""
 
-	@State var responce: APIResponce<R.Response>?
+	@State var responce: R.Response?
+	@State var error: String?
 	@State private var urlRequest: Combine.AnyCancellable?
 
-	var content: (R.Response) -> Content
+	var content: ( R.Response) -> Content
 
 	public var body: some View {
 
 		VStack {
 
 			if ProcessInfo.processInfo.environment["XCODE_RUNNING_FOR_PREVIEWS"] == "1" {
-				content(R.Response.PreviewValue)
+				content( R.Response.PreviewValue)
 			} else {
-				switch self.responce {
-				case .none:
+				if let responce = self.responce {
+					content(responce)
+				} else if let error = self.error  {
 					VStack {
-						if #available(iOS 14.0, *) {
-							ProgressView() {
-								Text("Loading!")
-							}
-						} else {
-							Text("Loading!")
-						}
-					}
-				case .success(let data):
-					content(data)
-				case .errored(let error):
-					VStack {
-						Text("Error \n \(error.localizedDescription)")
+						Text("Error \n \(error)")
 							.multilineTextAlignment(.leading)
 							.lineLimit(0)
 							.padding()
@@ -112,12 +102,15 @@ public struct RequestingView<R: Request, Content>: View where Content: View, R.B
 								self.requestStart()
 							}
 					}
-				case .failed(let message):
+				} else {
 					VStack {
-						Text(message)
-							.multilineTextAlignment(.leading)
-							.lineLimit(0)
-							.padding()
+						if #available(iOS 14.0, *) {
+							ProgressView() {
+								Text("Loading!")
+							}
+						} else {
+							Text("Loading!")
+						}
 					}
 				}
 			}
@@ -153,18 +146,30 @@ public struct RequestingView<R: Request, Content>: View where Content: View, R.B
 			self.urlRequest = Simulating(self.request, on: user)
 				.perform()
 				.manage(details: details)
-				.sink(receiveValue: { (resp) in
+				.sink(receiveCompletion: { (error) in
+					if case .failure(let error) = error {
+						withAnimation {
+							self.error = error.localizedDescription
+						}
+					}
+				}, receiveValue: { (response) in
 					withAnimation {
-						self.responce = resp
+						self.responce = response
 					}
 				})
 		} else {
 			self.urlRequest = self.request
 				.perform()
 				.manage(details: details)
-				.sink(receiveValue: { (resp) in
+				.sink(receiveCompletion: { (error) in
+					if case .failure(let error) = error {
+						withAnimation {
+							self.error = error.localizedDescription
+						}
+					}
+				}, receiveValue: { (response) in
 					withAnimation {
-						self.responce = resp
+						self.responce = response
 					}
 				})
 		}
