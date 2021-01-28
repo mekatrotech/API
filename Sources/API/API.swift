@@ -10,7 +10,7 @@ public protocol API {
 }
 
 public extension API {
-	@available(*, unavailable, message: "Please dont use any uninitialised stored properties on your api class")
+	@available(*, unavailable, message: "Please don't use any uninitialised stored properties on your api class")
 	init() {
 		fatalError()
 	}

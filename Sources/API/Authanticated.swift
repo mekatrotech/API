@@ -197,8 +197,6 @@ public extension Authanticated  {
 	/// Don't forget to store the returning value or request will be canceled!
 	/// - Parameter request: Requesting object
 
-
-	@available(iOS, introduced: 13.0, deprecated: 14.0, obsoleted: 14.1)
 	func perform<T: Request>(request : T) -> AnyPublisher<T.Response, Error> {
 
 		do {
@@ -233,7 +231,6 @@ public extension Authanticated  {
 	
 	@available(iOS, introduced: 13.0, obsoleted: 14.0, renamed: "perform(request:)")
 	func perform<T: Request>(request: T, callback: @escaping (T.Response?) -> ()) {
-
 
 		do {
 			var httpRequest = URLRequest(url: Self.apiBase.appendingPathComponent(T.path))
