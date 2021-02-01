@@ -11,6 +11,8 @@ import Combine
 
 public protocol HTTPApi: API {
 	static var apiBase: URL { get }
+
+	func perform<T: Request>(request : T) -> AnyPublisher<T.Response, Error>
 }
 
 

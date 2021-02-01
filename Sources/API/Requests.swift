@@ -66,7 +66,7 @@ extension PostRequest {
 		request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 	}
 }
-public extension Request where Base: Authanticated {
+public extension Request where Base: HTTPApi {
 	func perform() -> AnyPublisher<Self.Response, Error> {
 		return Base.shared.perform(request: self)
 	}
