@@ -29,7 +29,6 @@ public protocol Request {
 	associatedtype Base: API
 	associatedtype Response: (Codable & Previewable) = EmptyResponse
 	static var mode: LoginMode { get }
-	static var path: String { get }
 
 	func build(request: inout URLRequest) throws
 //	func decode(response: Data) -> Response
@@ -39,9 +38,15 @@ extension Request {
 	static var mode: LoginMode { .none }
 }
 
+public protocol HTTPRequest: Request where Base: HTTPApi {
+	static var path: String { get }
 
-public protocol PostRequest: Request where Base: HTTPApi, Self: Codable { }
-public protocol GetRequest: Request where Base: HTTPApi { }
+}
+
+public protocol PostRequest: HTTPRequest where Self: Codable {
+	static var Encoder: JSONEncoder { get }
+}
+public protocol GetRequest: HTTPRequest { }
 public protocol LoginRequired: Request { }
 
 extension LoginRequired {
@@ -58,11 +63,15 @@ extension GetRequest {
 	}
 }
 extension PostRequest {
-	public func build(request: inout URLRequest) throws {
+	static var Encoder: JSONEncoder {
 		let encoder = JSONEncoder()
+		return encoder
+	}
+
+	public func build(request: inout URLRequest) throws {
 		request.url = Self.Base.apiBase.appendingPathComponent(Self.path)
 		request.httpMethod = "post"
-		request.httpBody = try encoder.encode(self)
+		request.httpBody = try Self.Encoder.encode(self)
 		request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 	}
 }

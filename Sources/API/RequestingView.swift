@@ -31,7 +31,7 @@ public extension EnvironmentValues {
 }
 
 
-public struct Simulating<R: Request>: Request where R.Base: HTTPApi {
+public struct Simulating<R: HTTPRequest>: HTTPRequest where R.Base: Authanticated {
 
 	public func build(request: inout URLRequest) throws {
 		request.setValue("\(user)", forHTTPHeaderField: "x-user")
@@ -61,7 +61,7 @@ public func updateRequesting(identifier: String, clean: Bool = false) {
 	NotificationCenter.default.post(name: .requestUpdateNotification, object: nil, userInfo: ["requestingUpdateIdentifier": identifier, "clean": clean])
 }
 
-public struct RequestingView<R: Request, Content>: View where Content: View, R.Base : Authanticated {
+public struct RequestingView<R: HTTPRequest, Content>: View where Content: View, R.Base : Authanticated {
 
 	@Environment(\.simulatingUser) var simulatingUser: Int?
 

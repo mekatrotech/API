@@ -211,16 +211,9 @@ public extension Authanticated  {
 				break
 			}
 
-			let decoder = JSONDecoder()
-
-			let dateFormatter = DateFormatter()
-			dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-			dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-			decoder.dateDecodingStrategy = .formatted(dateFormatter)
-
 			return URLSession.shared.dataTaskPublisher(for: httpRequest)
 				.map { $0.data }
-				.decode(type: T.Response.self, decoder: decoder) // Decode it
+				.decode(type: T.Response.self, decoder: Self.Decoder) // Decode it
 				.receive(on: RunLoop.main)
 				.eraseToAnyPublisher()
 		} catch {
@@ -230,44 +223,5 @@ public extension Authanticated  {
 
 	
 	@available(iOS, introduced: 13.0, obsoleted: 14.0, renamed: "perform(request:)")
-	func perform<T: Request>(request: T, callback: @escaping (T.Response?) -> ()) {
-
-		do {
-			var httpRequest = URLRequest(url: Self.apiBase.appendingPathComponent(T.path))
-			try request.build(request: &httpRequest)
-
-
-
-			switch T.mode {
-			case .required:
-				Self.tokenHandler.currentLogin.getToken!.authanticate(on: &httpRequest)
-			case .none:
-				break
-			}
-
-
-			return URLSession.shared.dataTask(with: httpRequest, completionHandler: { (data, resp, err) in
-				if let data = data {
-
-					print("DBG: APIResp: \(String(data: data, encoding: .utf8)!)")
-					let decoder = JSONDecoder()
-					decoder.dateDecodingStrategy = .secondsSince1970
-					decoder.dataDecodingStrategy = .base64
-
-					if case let .success(data) = try? decoder.decode(APIResponce<T.Response>.self, from: data) {
-						callback(data)
-					} else {
-						callback(nil)
-					}
-				}
-
-				if err != nil {
-					callback(nil)
-				}
-			})
-			.resume()
-		} catch {
-			callback(nil)
-		}
-	}
+	func perform<T: Request>(request: T, callback: @escaping (T.Response?) -> ()) { }
 }
