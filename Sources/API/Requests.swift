@@ -39,12 +39,68 @@ extension Request {
 }
 
 public protocol HTTPRequest: Request where Base: HTTPApi {
-	static var path: String { get }
+	static var path: HTTPPath<Self> { get }
+}
 
+public struct HTTPPath<T: HTTPRequest>: ExpressibleByStringLiteral, ExpressibleByStringInterpolation, CustomStringConvertible {
+	public var description: String {
+		self.path
+	}
+
+	public struct StringInterpolation<T: HTTPRequest>: StringInterpolationProtocol {
+		// start with an empty string
+		var output = ""
+		var variables: [String: KeyPath<T, String>] = [:]
+
+		// allocate enough space to hold twice the amount of literal text
+		public init(literalCapacity: Int, interpolationCount: Int) {
+			output.reserveCapacity(literalCapacity * 2)
+			variables.reserveCapacity(interpolationCount)
+		}
+
+		// a hard-coded piece of text – just add it
+		public mutating func appendLiteral(_ literal: String) {
+			print("Appending \(literal)")
+			output.append(literal)
+		}
+
+		// a Twitter username – add it as a link
+		public mutating func appendInterpolation(named name: String, _ path: KeyPath<T, String>) {
+			output.append(":\(name)")
+			self.variables[name] = path
+		}
+	}
+
+	// the finished text for this whole component
+	public let path: String
+	public let variables: [String: KeyPath<T, String>]
+
+	// create an instance from a literal string
+	public init(stringLiteral value: String) {
+		self.path = value
+		variables = [:]
+	}
+
+	// create an instance from an interpolated string
+	public init(stringInterpolation: StringInterpolation<T>) {
+		path = stringInterpolation.output
+		variables = stringInterpolation.variables
+	}
+
+	func build(with object: T) -> String {
+		if self.variables.count == 0 {
+			return self.path
+		}
+		var output = self.path
+		for i in self.variables {
+			output = output.replacingOccurrences(of: ":\(i.key)", with: object[keyPath: i.value])
+		}
+		return output
+	}
 }
 
 public protocol PostRequest: HTTPRequest where Self: Codable {
-	static var Encoder: JSONEncoder { get }
+//	static var Encoder: JSONEncoder { get }
 }
 public protocol GetRequest: HTTPRequest { }
 public protocol LoginRequired: Request { }
@@ -57,7 +113,7 @@ extension GetRequest {
 	public func build(request: inout URLRequest) throws {
 //		let encoder = JSONEncoder()
 		request.httpMethod = "get"
-		request.url = Self.Base.apiBase.appendingPathComponent(Self.path)
+		request.url = Self.Base.apiBase.appendingPathComponent(Self.path.build(with: self))
 //		request.httpBody = try encoder.encode(self)
 //		request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 	}
@@ -69,7 +125,7 @@ extension PostRequest {
 	}
 
 	public func build(request: inout URLRequest) throws {
-		request.url = Self.Base.apiBase.appendingPathComponent(Self.path)
+		request.url = Self.Base.apiBase.appendingPathComponent(Self.path.build(with: self))
 		request.httpMethod = "post"
 		request.httpBody = try Self.Encoder.encode(self)
 		request.setValue("application/json", forHTTPHeaderField: "Content-Type")

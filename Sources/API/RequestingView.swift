@@ -31,26 +31,26 @@ public extension EnvironmentValues {
 }
 
 
-public struct Simulating<R: HTTPRequest>: HTTPRequest where R.Base: Authanticated {
-
-	public func build(request: inout URLRequest) throws {
-		request.setValue("\(user)", forHTTPHeaderField: "x-user")
-		try self.simulating.build(request: &request)
-	}
-
-	public typealias Base = R.Base
-	public static var mode: LoginMode  { R.mode }
-	public static var path: String { R.path }
-	public typealias Response = R.Response
-
-	public var simulating: R
-	public var user: Int
-
-	public init(_ simulating: R, on user: Int) {
-		self.simulating = simulating
-		self.user = user
-	}
-}
+//public struct Simulating<R: HTTPRequest>: HTTPRequest where R.Base: Authanticated {
+//
+//	public func build(request: inout URLRequest) throws {
+//		request.setValue("\(user)", forHTTPHeaderField: "x-user")
+//		try self.simulating.build(request: &request)
+//	}
+//
+//	public typealias Base = R.Base
+//	public static var mode: LoginMode  { R.mode }
+//	public static var path: HTTPPath<R> { R.path }
+//	public typealias Response = R.Response
+//
+//	public var simulating: R
+//	public var user: Int
+//
+//	public init(_ simulating: R, on user: Int) {
+//		self.simulating = simulating
+//		self.user = user
+//	}
+//}
 
 extension Notification.Name {
 	static var requestUpdateNotification = Notification.Name("requestUpdateNotification")
@@ -142,22 +142,22 @@ public struct RequestingView<R: HTTPRequest, Content>: View where Content: View,
 			return;
 		}
 		self.urlRequest?.cancel()
-		if let user = simulatingUser {
-			self.urlRequest = Simulating(self.request, on: user)
-				.perform()
-				.manage(details: details)
-				.sink(receiveCompletion: { (error) in
-					if case .failure(let error) = error {
-						withAnimation {
-							self.error = error.localizedDescription
-						}
-					}
-				}, receiveValue: { (response) in
-					withAnimation {
-						self.responce = response
-					}
-				})
-		} else {
+//		if let user = simulatingUser {
+//			self.urlRequest = Simulating(self.request, on: user)
+//				.perform()
+//				.manage(details: details)
+//				.sink(receiveCompletion: { (error) in
+//					if case .failure(let error) = error {
+//						withAnimation {
+//							self.error = error.localizedDescription
+//						}
+//					}
+//				}, receiveValue: { (response) in
+//					withAnimation {
+//						self.responce = response
+//					}
+//				})
+//		} else {
 			self.urlRequest = self.request
 				.perform()
 				.manage(details: details)
@@ -172,7 +172,7 @@ public struct RequestingView<R: HTTPRequest, Content>: View where Content: View,
 						self.responce = response
 					}
 				})
-		}
+//		}
 	}
 }
 
