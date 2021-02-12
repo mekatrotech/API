@@ -31,7 +31,7 @@ public protocol Request {
 	static var mode: LoginMode { get }
 
 	func build(request: inout URLRequest) throws
-//	func decode(response: Data) -> Response
+	func decode(response: Data) -> Response
 }
 
 extension Request {
