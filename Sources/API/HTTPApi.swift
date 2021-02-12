@@ -11,7 +11,7 @@ import Combine
 
 public protocol HTTPApi: API {
 	static var apiBase: URL { get }
-//	static var Decoder: JSONDecoder { get }
+	static var Decoder: JSONDecoder { get }
 }
 
 
