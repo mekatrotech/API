@@ -61,7 +61,7 @@ public func updateRequesting(identifier: String, clean: Bool = false) {
 	NotificationCenter.default.post(name: .requestUpdateNotification, object: nil, userInfo: ["requestingUpdateIdentifier": identifier, "clean": clean])
 }
 
-public struct RequestingView<R: HTTPRequest, Content>: View where Content: View, R.Base : Authanticated {
+public struct RequestingView<R: HTTPRequest, Content>: View where Content: View {
 
 	@Environment(\.simulatingUser) var simulatingUser: Int?
 
